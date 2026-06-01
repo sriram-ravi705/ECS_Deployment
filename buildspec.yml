@@ -1,0 +1,20 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 113497774625.dkr.ecr.us-east-1.amazonaws.com
+
+  build:
+    commands:
+      - docker build -t python/app .
+      - docker tag python/app:latest 113497774625.dkr.ecr.us-east-1.amazonaws.com/python/app:latest
+
+  post_build:
+    commands:
+      - docker push 113497774625.dkr.ecr.us-east-1.amazonaws.com/python/app:latest
+      - printf '[{"name":"pythonapp","imageUri":"113497774625.dkr.ecr.us-east-1.amazonaws.com/python/app:latest"}]' > imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json

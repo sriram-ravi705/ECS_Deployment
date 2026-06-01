@@ -3,6 +3,7 @@ version: 0.2
 phases:
   pre_build:
     commands:
+      - aws s3 cp s3://pythonappdockerfile01/Dockerfile .
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 113497774625.dkr.ecr.us-east-1.amazonaws.com
 
   build:

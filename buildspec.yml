@@ -26,7 +26,7 @@ phases:
       # Get OTEL config and startup script
       - aws s3 cp s3://pythonappdockerfile0509/otel/config.yaml otel/config.yaml
 
-      - aws s3 cp s3://pythonappdockerfile0509/start.sh .
+      - aws s3 cp s3://pythonappdockerfile0509/otel/start.sh .
 
 
       # Append OTEL configuration into Dockerfile

@@ -4,15 +4,11 @@ phases:
     commands:
       - aws s3 cp s3://pythonappdockerfile0509/Dockerfile .
       - aws s3 cp s3://pythonappdockerfile0509/otel/install-otel.sh .
-      - |
-        cat >> Dockerfile << 'DOCKEREOF'
-
-        # OpenTelemetry Collector (runs as a supervised background service)
-        COPY install-otel.sh /tmp/install-otel.sh
-        RUN chmod +x /tmp/install-otel.sh && /tmp/install-otel.sh && rm /tmp/install-otel.sh
-        EXPOSE 8889
-        ENTRYPOINT ["sh", "-c", "supervisord -c /etc/supervisord.conf & exec \"$0\" \"$@\""]
-        DOCKEREOF
+      - echo "" >> Dockerfile
+      - echo "# OpenTelemetry Collector" >> Dockerfile
+      - echo "COPY install-otel.sh /tmp/install-otel.sh" >> Dockerfile
+      - echo "RUN chmod +x /tmp/install-otel.sh && /tmp/install-otel.sh && rm /tmp/install-otel.sh" >> Dockerfile
+      - echo "EXPOSE 8889" >> Dockerfile
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 228998978698.dkr.ecr.us-east-1.amazonaws.com
   build:
     commands:

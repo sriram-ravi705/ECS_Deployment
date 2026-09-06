@@ -1,68 +1,29 @@
 version: 0.2
-
 phases:
-
   pre_build:
     commands:
-
       # Get Dockerfile
       - aws s3 cp s3://pythonappdockerfile0509/Dockerfile .
-
-
-      # Create OTEL directory
-      - mkdir -p otel
-
-
-      # Download OpenTelemetry Collector
-      - wget https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.130.0/otelcol-contrib_0.130.0_linux_amd64.tar.gz
-
-      - tar -xzf otelcol-contrib_0.130.0_linux_amd64.tar.gz
-
-      - mv otelcol-contrib otel/otelcol
-
-      - chmod +x otel/otelcol
-
-
-      # Get OTEL config and startup script
-      - aws s3 cp s3://pythonappdockerfile0509/otel/config.yaml otel/config.yaml
-
-      - aws s3 cp s3://pythonappdockerfile0509/otel/start.sh .
-
-
-      # Append OTEL configuration into Dockerfile
+      # Get OTEL install script (downloads binary + writes its own config + service entry)
+      - aws s3 cp s3://pythonappdockerfile0509/otel/install-otel.sh .
+      # Append OTEL install step into Dockerfile
       - echo "" >> Dockerfile
       - echo "# OpenTelemetry Collector" >> Dockerfile
-      - echo "COPY otel/otelcol /otel/otelcol" >> Dockerfile
-      - echo "COPY otel/config.yaml /otel/config.yaml" >> Dockerfile
-      - echo "COPY start.sh /start.sh" >> Dockerfile
-      - echo "RUN chmod +x /start.sh" >> Dockerfile
-      - echo "RUN chmod +x /otel/otelcol" >> Dockerfile
+      - echo "COPY install-otel.sh /tmp/install-otel.sh" >> Dockerfile
+      - echo "RUN apk add --no-cache wget && chmod +x /tmp/install-otel.sh && /tmp/install-otel.sh && rm /tmp/install-otel.sh" >> Dockerfile
       - echo "" >> Dockerfile
       - echo "# OTEL Metrics Port" >> Dockerfile
       - echo "EXPOSE 8889" >> Dockerfile
-      - echo "ENTRYPOINT [\"/start.sh\"]" >> Dockerfile
-
-
       # Login to ECR
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 228998978698.dkr.ecr.us-east-1.amazonaws.com
-
-
   build:
     commands:
-
       - docker build -t python/app .
-
       - docker tag python/app:latest 228998978698.dkr.ecr.us-east-1.amazonaws.com/python/app:latest
-
-
   post_build:
     commands:
-
       - docker push 228998978698.dkr.ecr.us-east-1.amazonaws.com/python/app:latest
-
       - printf '[{"name":"pythonapp","imageUri":"228998978698.dkr.ecr.us-east-1.amazonaws.com/python/app:latest"}]' > imagedefinitions.json
-
-
 artifacts:
   files:
     - imagedefinitions.json
